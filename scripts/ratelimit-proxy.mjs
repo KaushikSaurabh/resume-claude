@@ -1,11 +1,11 @@
 // Fail-open proxy for Claude Code: forwards all traffic to api.anthropic.com,
 // captures anthropic-ratelimit-* response headers to ~/.claude/ratelimit.json.
-// If ANYTHING goes wrong, the request still passes — header capture is best-effort only.
+// If ANYTHING goes wrong, the request still passes  -  header capture is best-effort only.
 //
 // Usage:  node ratelimit-proxy.mjs   (listens on 127.0.0.1:8787)
 //         then set ANTHROPIC_BASE_URL=http://127.0.0.1:8787
 //
-// ponytail: single upstream host, no pooling/retry tuning — Node's default agent is fine
+// ponytail: single upstream host, no pooling/retry tuning  -  Node's default agent is fine
 //           for one CLI. Add keep-alive only if latency measurably regresses.
 
 import http from 'node:http';
@@ -57,7 +57,7 @@ const server = http.createServer((req, res) => {
 
 server.on('error', (e) => {
   if (e.code === 'EADDRINUSE') {
-    console.error(`Port ${PORT} already in use — proxy likely already running. Exiting.`);
+    console.error(`Port ${PORT} already in use  -  proxy likely already running. Exiting.`);
     process.exit(0);
   }
   console.error('proxy server error:', e.message);

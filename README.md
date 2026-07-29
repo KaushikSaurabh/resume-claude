@@ -2,16 +2,21 @@
 
 **Automatically pause and resume Claude Code when you hit the rate limit.**
 
-If you've ever been cut off mid-task by Claude Code's *5-hour* or *weekly* usage limit and had to babysit the terminal waiting for it to reset — this fixes that. Resume Claude shows your live usage in the status line, holds your work cleanly before you run out, and continues the **same session automatically** the moment your limit resets. No keystroke, no re-prompting, no lost context.
+If you've ever been cut off mid-task by Claude Code's *5-hour* or *weekly* usage limit and had to babysit the terminal waiting for it to reset - this fixes that. Resume Claude shows your live usage in the status line, holds your work cleanly before you run out, and continues the **same session automatically** the moment your limit resets. No keystroke, no re-prompting, no lost context.
 
 > Claude Code plugin. Windows / PowerShell + Node.
 
 ## What it does
 
-- **Live rate-limit status line** — a `model` line plus `ctx | 5h% | wk% | reset | burn | cost | exit | RESUME | [PONYTAIL]`. Real Anthropic usage, colour-coded, and stale-marked (`~`) when the data is over 15 minutes old, so you always know how close you are to the limit and when it resets.
-- **Hold guard** — a `UserPromptSubmit` hook that, as you approach your limit (default 90%, configurable), tells the session to persist its state and hold, instead of getting cut off mid-work.
-- **No-keystroke, same-window auto-resume** — at a 5-hour hold the guard instructs the session to schedule its own wake-up, so the *same window* re-invokes itself the instant your quota refreshes. (Weekly limits, which can be days out, tell you when to come back instead.)
-- **`/resume-claude`** — one command to arm/disarm auto-resume, set the limit threshold, or turn the guard off.
+Claude Code cuts you off when you hit a usage limit, and normally you'd sit there refreshing the terminal waiting for it to come back. Resume Claude handles all three parts of that problem:
+
+- **You can see the limit coming.** A second status-line row shows your real usage live: context used, 5-hour and weekly percentages, a countdown to reset, burn rate, and session cost. It colours amber then red as you climb, and marks the numbers with a `~` when they're more than 15 minutes stale, so you're never guessing how much room is left.
+
+- **It stops you cleanly before you run out.** As you near the limit (90% by default, or whatever you set), it asks Claude to write its progress to a `STATE.md` note and pause, so you stop at a clean checkpoint instead of getting killed in the middle of an edit.
+
+- **It resumes itself, in the same window, with no keystroke.** When you hit the 5-hour wall, Claude schedules its own wake-up for the moment your quota refreshes and picks the work back up from that `STATE.md` note. You can walk away and come back to finished work. (Weekly limits can be days out, so for those it just tells you when to come back.)
+
+- **One command to control it: `/resume-claude`.** Turn auto-resume on or off, change the limit threshold, or disable the guard entirely.
 
 ## Install
 
@@ -47,11 +52,11 @@ Uninstall the host changes with:
 
 ## Overrides
 
-- `CLAUDE_LIMIT_OVERRIDE=1` — silence the guard for the session.
-- `CLAUDE_PROXY_OFF=1` — skip the proxy (rate-limit fields show `n/a`, everything else works).
+- `CLAUDE_LIMIT_OVERRIDE=1` - silence the guard for the session.
+- `CLAUDE_PROXY_OFF=1` - skip the proxy (rate-limit fields show `n/a`, everything else works).
 
 ## Honest limits
 
 - Auto-resume is a behavioural contract: the hook can't call tools, it instructs the model. Robustly worded, not hard-enforced.
-- The proxy is passive — it captures on traffic, so an idle window's numbers refresh only on the next message. Refresh *detection* is clock-based, so holds still release correctly.
+- The proxy is passive - it captures on traffic, so an idle window's numbers refresh only on the next message. Refresh *detection* is clock-based, so holds still release correctly.
 - Nothing can inject input into an idle window from outside; the same-window, no-keystroke resume path maxes at 1 hour, which is why weekly limits can't self-wake.

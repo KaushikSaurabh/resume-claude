@@ -21,10 +21,10 @@ Use AskUserQuestion with these questions:
 - Q2 "Hold threshold" header "Limit": options **90% (default)** / **80%** / **95%** / **Guard OFF**.
 Then apply the selections via the commands below. If the user picked "Enable here", ask (or infer from cwd) and arm with the default prompt unless they gave one.
 
-## GATE PREAMBLE — before the first Bash call, output these facts (a fact-forcing gate requires them):
+## GATE PREAMBLE - before the first Bash call, output these facts (a fact-forcing gate requires them):
 1. Request: configure limit-hold / auto-resume per the user's selection.
 2. The commands run `claude-resume.ps1` (reads/writes `~/.claude/.resume-armed` JSON {cwd,prompt,armed_at}) and/or write `~/.claude/.limit-config` (single line: integer percent, or the literal `off`).
-3. No conflict — these are the dedicated resume/limit config files.
+3. No conflict - these are the dedicated resume/limit config files.
 4. Instruction: the user's `/arm-resume $ARGUMENTS` (or interactive selection).
 
 ## Commands
@@ -38,4 +38,4 @@ Then apply the selections via the commands below. If the user picked "Enable her
 - Guard ON (default):   `powershell -Command "Remove-Item $HOME\.claude\.limit-config -Force -ErrorAction SilentlyContinue"`
 - Read limit config:    `powershell -Command "if(Test-Path $HOME\.claude\.limit-config){Get-Content $HOME\.claude\.limit-config}else{'90 (default)'}"`
 
-Use the current directory for -Cwd. After applying, report in one line the resulting state: auto-resume (armed where / off) AND guard (hold at N% / OFF). If auto-resume was armed, remind the user that on next refresh THIS session self-resumes via ScheduleWakeup (same window) or, if closed, the scheduled task relaunches it — and that a STATE.md should exist to guide the pickup.
+Use the current directory for -Cwd. After applying, report in one line the resulting state: auto-resume (armed where / off) AND guard (hold at N% / OFF). If auto-resume was armed, remind the user that on next refresh THIS session self-resumes via ScheduleWakeup (same window) or, if closed, the scheduled task relaunches it - and that a STATE.md should exist to guide the pickup.

@@ -1,4 +1,4 @@
-// Claude Code status line — Node port of statusline.ps1 (PowerShell was ~3s/render,
+// Claude Code status line  -  Node port of statusline.ps1 (PowerShell was ~3s/render,
 // over Claude Code's timeout; node starts in ~50ms). Same output.
 // Reads Status JSON from stdin; renders model, ctx meter, 5h/wk/reset, burn, cost, exit, tags.
 import fs from 'node:fs';
@@ -90,7 +90,7 @@ if (tp && exists(tp)) {
   }
 }
 
-// RESUME STATUS — persistent: always show ON/OFF + configured limit threshold.
+// RESUME STATUS  -  persistent: always show ON/OFF + configured limit threshold.
 const armed = exists(path.join(HOME, '.claude/.resume-armed'));
 let limitPct = '90';
 const cfg = rd(path.join(HOME, '.claude/.limit-config'));

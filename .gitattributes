@@ -1,0 +1,5 @@
+# Shell scripts and Node must use LF, or they break on macOS/Linux
+# (CRLF in a shebang => "bad interpreter"). Authored on Windows, run on Unix.
+*.sh   text eol=lf
+*.mjs  text eol=lf
+*.json text eol=lf

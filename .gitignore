@@ -1,4 +1,4 @@
-# Runtime state — never commit (contains your usage numbers / machine state)
+# Runtime state  -  never commit (contains your usage numbers / machine state)
 ratelimit.json
 resume-launcher.log
 .limit-config
