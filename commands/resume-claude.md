@@ -16,10 +16,15 @@ The user wants to configure the limit/resume system. Arg received: `$ARGUMENTS`
 - Free text with no keyword → treat as `arm` with that text as the prompt.
 
 ## Interactive menu (empty args)
-Use AskUserQuestion with these questions:
-- Q1 "Auto-resume" header "Resume": options **Enable here** / **Disable** / **Leave as-is**.
-- Q2 "Hold threshold" header "Limit": options **90% (default)** / **80%** / **95%** / **Guard OFF**.
-Then apply the selections via the commands below. If the user picked "Enable here", ask (or infer from cwd) and arm with the default prompt unless they gave one.
+Make ONE AskUserQuestion call that carries BOTH questions in a single `questions` array (the tool takes up to 4). Do NOT ask Q1 alone and stop - that drops the limit% option, which is the whole point of the config menu.
+
+The two questions control DIFFERENT systems - label them so that's obvious:
+- Q1 header "Resume", question "Auto-resume (relaunch this project after reset)": options **Enable here** / **Auto-resume: OFF** / **Leave as-is**.
+- Q2 header "Limit", question "Stop-at-limit guard (applies to ALL sessions on this machine)": options **90% (default)** / **80%** / **95%** / **Stop-at-limit guard: OFF**.
+
+Note for the user, in your framing before/after the questions: the stop-at-limit guard is already machine-wide - it holds EVERY Claude Code session at the threshold, so there is no separate "arm everywhere" to enable. Auto-resume (Q1) is the only per-directory piece, because relaunch has to target one project.
+
+Both questions go in that one call. Then apply the selections via the commands below. If the user picked "Enable here", ask (or infer from cwd) and arm with the default prompt unless they gave one.
 
 ## GATE PREAMBLE - before the first Bash call, output these facts (a fact-forcing gate requires them):
 1. Request: configure limit-hold / auto-resume per the user's selection.
