@@ -19,6 +19,15 @@ Claude Code cuts you off when you hit a usage limit, and normally you'd sit ther
 
 - **One command to control it: `/resume-claude`.** Turn auto-resume on or off, change the limit threshold, or disable the guard entirely.
 
+## Light by design
+
+It adds almost nothing to your usage or your machine:
+
+- **No extra API calls.** Usage numbers aren't polled - the local proxy reads the `anthropic-ratelimit-*` headers off responses to traffic you were already sending. It's a pass-through pipe (`req -> upstream -> res`); header capture is a side effect, not a request. Nothing is sent on your behalf.
+- **Resume from a checkpoint, not a replay.** On wake it continues from the compact `STATE.md` note rather than re-feeding the whole conversation, so getting back to work doesn't burn a pile of tokens.
+- **No busy-waiting.** Between limit and reset it sleeps on scheduled wake-ups; the closed-window fallback job only acts when a wake is actually overdue, so it isn't spinning in the background.
+- **Fails open.** If the proxy is down or `jq` is missing, requests still go through and the guard degrades to `n/a` rather than blocking you - the tool can never become the thing standing between you and the API.
+
 ## Install
 
 From Claude Code:
