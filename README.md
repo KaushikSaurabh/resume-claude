@@ -18,7 +18,7 @@ If you've ever been cut off mid-task by Claude Code's *5-hour* or *weekly* usage
 From Claude Code:
 
 ```
-/plugin marketplace add FreyGit/resume-claude
+/plugin marketplace add KaushikSaurabh/resume-claude
 /plugin install resume-claude@FreyGit
 ```
 
