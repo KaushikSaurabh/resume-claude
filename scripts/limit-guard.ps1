@@ -42,7 +42,7 @@ if (Test-Path $holdFile) {
         Write-Output "[LIMIT GUARD] Quota window has RESET (clock-confirmed). The hold is cleared - you may RESUME the held work now. Pick up from STATE.md / the resume note you wrote before holding."
     } else {
         $wait = [int](($holdEpoch - $now) / 60)
-        $redelay = ($holdEpoch - $now) + 30
+        $redelay = [math]::Min(($holdEpoch - $now) + 30, 3600)   # cap at ScheduleWakeup max; chains until reset
         Write-Output "[LIMIT GUARD] Still holding for quota refresh (~${wait}m left). Do NOT resume heavy work. CALL THE ScheduleWakeup TOOL now with delaySeconds=$redelay and prompt='Quota refreshed - resume the held work from STATE.md', then STOP. This re-arms the same-window auto-resume so no keystroke is needed at reset."
     }
     exit 0
@@ -73,18 +73,26 @@ if ($pct -ge $holdPct) {
     if ($resetEpoch -gt $now) { Set-Content $holdFile $resetEpoch }
     $headroom = 100 - $pct
     $secsToReset = $resetEpoch - $now
-    # ScheduleWakeup is clamped to <=3600s. If reset is further out (typically the WEEKLY
-    # window), a self-wake is impossible - tell the user to come back instead.
-    if ($secsToReset -gt 3600) {
+    # ScheduleWakeup is clamped to <=3600s per call. For waits longer than that we CHAIN:
+    # cap this hop at 3600s and let CASE A re-arm on each future turn until the clock passes
+    # reset. Only give up (manual return) when the wait is so long that chaining is silly -
+    # i.e. a genuinely long window (>5h, effectively the WEEKLY limit, days out).
+    # ponytail: 5h cutoff, tune if a mid-length limit tier ever appears.
+    if ($secsToReset -gt 18000) {
         $days = [math]::Floor($secsToReset / 86400); $hrs = [math]::Floor(($secsToReset % 86400) / 3600)
-        Write-Output "[LIMIT GUARD] $which limit at $pct% - resets in ~${days}d${hrs}h, too far for same-window auto-resume (ScheduleWakeup maxes at 1h). PERSIST STATE.md now and STOP. This is a long ($which) limit: come back after it resets (~${days}d${hrs}h) and continue manually - do NOT schedule a wake. Override: CLAUDE_LIMIT_OVERRIDE=1."
+        Write-Output "[LIMIT GUARD] $which limit at $pct% - resets in ~${days}d${hrs}h, too far for same-window auto-resume (ScheduleWakeup maxes at 1h and this is days out). PERSIST STATE.md now and STOP. Come back after it resets (~${days}d${hrs}h) and continue manually - do NOT schedule a wake. Override: CLAUDE_LIMIT_OVERRIDE=1."
     } else {
-        $delay = if ($resetEpoch -gt $now) { $secsToReset + 30 } else { 300 }
+        # Cap the hop at 3600s (ScheduleWakeup max). If reset is further than that, this wake
+        # lands early and CASE A re-arms the next hop; the +30s buffer only applies on the
+        # final hop that actually clears reset.
+        $raw = if ($resetEpoch -gt $now) { $secsToReset + 30 } else { 300 }
+        $delay = [math]::Min($raw, 3600)
+        $more = if ($secsToReset + 30 -gt 3600) { " (reset is >1h out; this wake lands early and re-arms automatically until quota refreshes)" } else { "" }
         # Fallback: record intended wake so the 5-min scheduled task can catch a missed
         # in-session ScheduleWakeup call. fire_epoch = when the external launcher may fire.
         $wake = [ordered]@{ fire_epoch = ($now + $delay); armed_at = $now }
         $wake | ConvertTo-Json | Set-Content (Join-Path $HOME '.claude/.wake-intent')
-        Write-Output "[LIMIT GUARD] $which limit at $pct% ($resetTxt), ~$headroom% headroom. DO THIS NOW, in this turn, in order: (1) persist working state to STATE.md (done / next / open threads); (2) CALL THE ScheduleWakeup TOOL with delaySeconds=$delay and prompt='Quota refreshed - resume the held work from STATE.md'; (3) then STOP without further work. Step 2 is the auto-resume - this same window will re-invoke itself at reset with full context, no keystroke needed. If a task is one or two steps from done and fits ~$headroom%, finish it first and say so. Override: CLAUDE_LIMIT_OVERRIDE=1."
+        Write-Output "[LIMIT GUARD] $which limit at $pct% ($resetTxt), ~$headroom% headroom. DO THIS NOW, in this turn, in order: (1) persist working state to STATE.md (done / next / open threads); (2) CALL THE ScheduleWakeup TOOL with delaySeconds=$delay and prompt='Quota refreshed - resume the held work from STATE.md'; (3) then STOP without further work.$more Step 2 is the auto-resume - this same window will re-invoke itself, no keystroke needed. If a task is one or two steps from done and fits ~$headroom%, finish it first and say so. Override: CLAUDE_LIMIT_OVERRIDE=1."
     }
 } elseif ($pct -ge $softPct) {
     Write-Output "[LIMIT GUARD] Heads-up: $which usage at $pct% ($resetTxt). Prefer smaller, checkpointable steps; hard hold fires at $holdPct%."
