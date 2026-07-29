@@ -73,7 +73,7 @@ bash "$CLAUDE_PLUGIN_ROOT/install.sh" --remove   # macOS / Linux
 
 - Auto-resume is a behavioural contract: the hook can't call tools, it instructs the model. Robustly worded, not hard-enforced.
 - The proxy is passive - it captures on traffic, so an idle window's numbers refresh only on the next message. Refresh *detection* is clock-based, so holds still release correctly.
-- Nothing can inject input into an idle window from outside; the same-window, no-keystroke resume path maxes at 1 hour, which is why weekly limits can't self-wake.
+- Each `ScheduleWakeup` call is capped at 1 hour by the platform, so longer waits are covered by *chaining*: the guard re-arms a fresh hop every turn (with the closed-window Scheduled Task / launchd / cron job as backstop) until the window reopens. This makes the 5-hour limit fully self-resuming, no keystroke. Weekly limits can be days out, though - too many reboots, sleeps, and closed windows for an unbroken chain to survive - so those deliberately just notify you rather than promise a resume they can't reliably keep.
 
 ## Platform support
 
