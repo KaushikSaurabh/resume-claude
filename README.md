@@ -13,7 +13,7 @@ Claude Code cuts you off when you hit a usage limit, and normally you'd sit ther
 
 - **You can see the limit coming.** A second status-line row shows your real usage live: context used, 5-hour and weekly percentages, a countdown to reset, burn rate, and session cost. It colours amber then red as you climb, and marks the numbers with a `~` when they're more than 15 minutes stale, so you're never guessing how much room is left.
 
-- **It stops you cleanly before you run out.** As you near the limit (90% by default, or whatever you set), it asks Claude to write its progress to a `STATE.md` note and pause, so you stop at a clean checkpoint instead of getting killed in the middle of an edit.
+- **It stops you cleanly before you run out.** As you near the limit (90% by default, or whatever you set), it asks Claude to write its progress to a `STATE.md` note and pause, so you stop at a clean checkpoint instead of getting killed in the middle of an edit. The threshold you set applies machine-wide: the hold is a shared state file, so every Claude Code session you're running honors it - each one picks up the hold on its next prompt, saves its own `STATE.md`, and pauses. One heavy session can't drain the quota out from under the others.
 
 - **It resumes itself, in the same window, with no keystroke.** When you hit the 5-hour wall, Claude schedules its own wake-up for the moment your quota refreshes and picks the work back up from that `STATE.md` note. You can walk away and come back to finished work. (Weekly limits can be days out, so for those it just tells you when to come back.)
 
