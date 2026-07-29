@@ -4,7 +4,8 @@
 
 If you've ever been cut off mid-task by Claude Code's *5-hour* or *weekly* usage limit and had to babysit the terminal waiting for it to reset - this fixes that. Resume Claude shows your live usage in the status line, holds your work cleanly before you run out, and continues the **same session automatically** the moment your limit resets. No keystroke, no re-prompting, no lost context.
 
-> Claude Code plugin. Windows / PowerShell + Node.
+> Claude Code plugin. Windows (PowerShell) and macOS/Linux (bash), both + Node.
+> Windows is tested and in daily use. The macOS/Linux port is new and not yet verified on a real Mac (see [Platform support](#platform-support)).
 
 ## What it does
 
@@ -31,15 +32,24 @@ Then run the one-time host setup (see below) and restart your terminal.
 
 ## Why it needs a setup step
 
-Plugins can't edit your PowerShell profile or register OS scheduled tasks, and two features need those:
+Plugins can't edit your shell profile or register OS background jobs, and two features need those:
 
-- **Rate-limit capture** routes Claude Code's traffic through a local proxy via `ANTHROPIC_BASE_URL` (set in your profile). Without it, the 5h / wk / reset fields show `n/a`.
-- The **resume fallback** (for when the window is fully closed) uses a Windows Scheduled Task.
+- **Rate-limit capture** routes Claude Code's traffic through a local proxy via `ANTHROPIC_BASE_URL` (set in your shell profile). Without it, the 5h / wk / reset fields show `n/a`.
+- The **resume fallback** (for when the window is fully closed) uses a Windows Scheduled Task, or a launchd job on macOS / a cron entry on Linux.
 
-So after enabling the plugin, run the setup once:
+So after enabling the plugin, run the setup once for your platform.
+
+**Windows (PowerShell):**
 
 ```powershell
 & "$env:CLAUDE_PLUGIN_ROOT\install.ps1"      # or the full path to install.ps1
+```
+
+**macOS / Linux (bash):**
+
+```bash
+bash "$CLAUDE_PLUGIN_ROOT/install.sh"        # or the full path to install.sh
+# needs jq for reading usage:  brew install jq   (macOS)  /  apt install jq  (Linux)
 ```
 
 Then open a NEW terminal and launch `claude`. Rate-limit fields go live after the first message.
@@ -47,7 +57,11 @@ Then open a NEW terminal and launch `claude`. Rate-limit fields go live after th
 Uninstall the host changes with:
 
 ```powershell
-& "...\install.ps1" -Remove
+& "...\install.ps1" -Remove       # Windows
+```
+
+```bash
+bash "$CLAUDE_PLUGIN_ROOT/install.sh" --remove   # macOS / Linux
 ```
 
 ## Overrides
@@ -60,3 +74,12 @@ Uninstall the host changes with:
 - Auto-resume is a behavioural contract: the hook can't call tools, it instructs the model. Robustly worded, not hard-enforced.
 - The proxy is passive - it captures on traffic, so an idle window's numbers refresh only on the next message. Refresh *detection* is clock-based, so holds still release correctly.
 - Nothing can inject input into an idle window from outside; the same-window, no-keystroke resume path maxes at 1 hour, which is why weekly limits can't self-wake.
+
+## Platform support
+
+| Platform | Status |
+| --- | --- |
+| Windows (PowerShell) | Tested, in daily use. |
+| macOS / Linux (bash) | Ported, not yet verified on a real Mac. |
+
+The status line and the proxy are pure Node, so they behave the same everywhere. The guard, auto-resume, and installer are separate PowerShell and bash implementations of the same logic; the bash side was authored on Windows and passes syntax plus hold/release functional checks, but the usage-reading path (needs `jq`), the launchd job, and the Terminal relaunch have not been exercised on macOS yet. If you run it on a Mac, feedback and fixes are welcome. On macOS/Linux the guard needs `jq`; without it the hold/release still works but live usage reads show `n/a`.
