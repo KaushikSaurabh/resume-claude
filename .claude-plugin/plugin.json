@@ -1,0 +1,27 @@
+{
+  "name": "resume-claude",
+  "displayName": "Resume Claude",
+  "version": "1.0.0",
+  "description": "Automatically pause and resume Claude Code when you hit the 5-hour or weekly rate limit. Shows live usage (5h, weekly, reset countdown) in the status line, holds your work before you run out, and auto-continues the same session the moment your limit resets — no keystroke needed. For Claude Code on Windows.",
+  "author": {
+    "name": "Resume Claude contributors"
+  },
+  "homepage": "https://github.com/FreyGit/resume-claude",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "rate-limit",
+    "auto-resume",
+    "resume-after-rate-limit",
+    "usage-limit",
+    "status-line",
+    "5-hour-limit",
+    "weekly-limit",
+    "windows",
+    "powershell"
+  ],
+  "statusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PLUGIN_ROOT}/statusline.mjs\""
+  }
+}

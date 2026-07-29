@@ -1,0 +1,14 @@
+# Runtime state — never commit (contains your usage numbers / machine state)
+ratelimit.json
+resume-launcher.log
+.limit-config
+.limit-hold
+.limit-override
+.resume-armed
+.wake-intent
+.ponytail-active
+
+# OS / editor cruft
+Thumbs.db
+.DS_Store
+*.swp

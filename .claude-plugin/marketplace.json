@@ -1,0 +1,13 @@
+{
+  "name": "FreyGit",
+  "owner": {
+    "name": "FreyGit"
+  },
+  "plugins": [
+    {
+      "name": "resume-claude",
+      "source": "./",
+      "description": "Automatically pause and resume Claude Code when you hit the 5-hour or weekly rate limit. Live usage in the status line, a hold-guard near the limit, and no-keystroke same-session auto-resume when the limit resets. Windows/PowerShell + Node."
+    }
+  ]
+}
