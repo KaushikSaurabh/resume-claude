@@ -58,12 +58,34 @@ Add-Content $log "$stamp LAUNCH cwd=$cwd util=$([math]::Round($max*100))% prompt
 # the transcript .jsonl, so --continue restores it). Falls back to a plain pwsh window.
 # Opens in a NEW visible terminal window so the user can see/interact with it.
 $psCmd = "Set-Location -LiteralPath '$cwd'; claude --continue '$($prompt -replace "'","''")'"
-try {
-    Start-Process -FilePath 'wt.exe' -ArgumentList @('new-tab','--title','Claude Resume','pwsh','-NoExit','-Command',$psCmd) -ErrorAction Stop
-    Add-Content $log "$stamp OK resumed via --continue in new terminal tab"
-} catch {
+
+# Prefer REAL binaries over WindowsApps alias stubs (the stubs fail 0x80070002 under a
+# hidden scheduled task). Try Program Files pwsh, then System32 powershell, then PATH.
+$pwsh = @(
+    "$env:ProgramFiles\PowerShell\7\pwsh.exe",
+    "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+) | Where-Object { $_ -and (Test-Path -LiteralPath $_ -PathType Leaf) } | Select-Object -First 1
+if (-not $pwsh) { $pwsh = (Get-Command pwsh.exe -ErrorAction SilentlyContinue).Source }
+if (-not $pwsh) { $pwsh = (Get-Command powershell.exe -ErrorAction SilentlyContinue).Source }
+if (-not $pwsh) { $pwsh = 'powershell.exe' }
+
+# Only use Windows Terminal if wt.exe resolves to an actual runnable file (not an alias stub).
+$wt = (Get-Command wt.exe -ErrorAction SilentlyContinue).Source
+$wtUsable = $wt -and (Test-Path -LiteralPath $wt -PathType Leaf) -and ((Get-Item -LiteralPath $wt).Length -gt 0)
+
+$launched = $false
+if ($wtUsable) {
     try {
-        Start-Process -FilePath 'pwsh' -ArgumentList @('-NoExit','-Command',$psCmd) -WorkingDirectory $cwd
+        Start-Process -FilePath $wt -ArgumentList @('new-tab','--title','Claude Resume',$pwsh,'-NoExit','-Command',$psCmd) -ErrorAction Stop
+        Add-Content $log "$stamp OK resumed via --continue in new terminal tab"
+        $launched = $true
+    } catch {
+        Add-Content $log "$stamp WARN wt.exe launch failed ($($_.Exception.Message)), falling back to pwsh window"
+    }
+}
+if (-not $launched) {
+    try {
+        Start-Process -FilePath $pwsh -ArgumentList @('-NoExit','-Command',$psCmd) -WorkingDirectory $cwd -ErrorAction Stop
         Add-Content $log "$stamp OK resumed via --continue in pwsh window"
     } catch {
         Add-Content $log "$stamp ERROR $($_.Exception.Message)"
